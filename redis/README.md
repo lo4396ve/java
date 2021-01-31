@@ -1,14 +1,28 @@
----
-title: 2020-12-21
-date: 2020-12-21 14:24
----
+
 # Redis
 ## 介绍
 redis[官方介绍](https://redis.io/topics/introduction)。
-## 学习 redis 的理由
-* redis 很牛，即使用不到，也应该学习了解
-* 性能好，适合一些场景做缓存，高并发
-* 面试常问（大多问原理）
+ 
+**理解Redis**
+ 
+Redis是运行在内存中的非关系型数据库。以键值(Key-Value)的方式存储数据。
+
+如果以前端的思维去理解，整个Redis库就像一个Js的Object对象，可以往这个Object对象中添加键值对(key-value)，每个键值对可以存放String、Number、Array和Object等任何Js提供的数据类型。Redis亦是如此，通过不同的操作命令，也可以往Redis数据库中添加键值对，只不过每个键值对存放的是Redis提供的strings, hashes, lists, sets, zset、bitmaps、hyperloglogs、geospatial和streams数据类型。
+
+其中比较常用的是strings, hashes, lists, sets, zset这五种数据类型。
+
+## Redis使用场景
+* 缓存（数据查询、短连接、新闻内容、商品内容等等）
+* 分布式集群架构中的session管理
+* 聊天室的在线好友列表。 任务队列
+* 处理过期项目
+  
+等等。。。
+## 可视化客户端
+* Redis Desktop Manager；支持Windows、Mac OS、Linux；收费
+* AnotherRedisDesktopManager；支持Windows、Mac OS、Linux；收费
+* red：支持Mac OS；免费
+* G-dis；支持Mac OS；免费
 ## 常用数据类型
 常用的数据类型有 String，Hash，List，Set，SortedSet(ZSet)
 ### （一）String类型
