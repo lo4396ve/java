@@ -32,10 +32,10 @@ Web上下文模块建立在应用程序上下文模块之上，为基于web的�
 MVC框架是一个全功能的构建Web应用程序的MVC实现。通过策略接口，MVC框架变成为高度可配置的。MVC容纳了大量视图技术，其中包括JSP、POI等，模型来有JavaBean来构成，存放于m当中，而视图是一个街口，负责实现模型，控制器表示逻辑代码，由c的事情。Spring框架的功能可以用在任何J2EE服务器当中，大多数功能也适用于不受管理的环境。Spring的核心要点就是支持不绑定到特定J2EE服务的可重用业务和数据的访问的对象，毫无疑问这样的对象可以在不同的J2EE环境，独立应用程序和测试环境之间重用。
 
 ## 核心概念
-**IOC控制反转**
+### IOC控制反转
 IOC是一种编程思想，目的是为了降低程序耦合。就是把创建对象交给Spring去做，业务程序不创建对象只接搜对象。
 
-**思想来源：**
+##### 原理分析：
 （1）从一个demo来理解IOC思想，假如有个User实体类，UserDao接口，UserDaoImpl实现类，UserServer接口，UserServiceImpl实现类以及一个UserTest测试类。
 
 UserDao:
@@ -139,28 +139,249 @@ Spring做的就是把new一个对象交给spring去做，业务不需要去做�
 ```
 所有被\<bean\>标签配置的类都会放到Spring容器，什么时候想用这个类的实例对象，只需要从Spring容器中取，而不用自己去new实例对象。这就是Spring的IOC思想。
 
-**Spring创建对象的方式：**
+### Spring创建对象的方式
+也就是依赖注入方式(DI)：
+##### 一、使用构造器注入
 * 使用无参构造函数创建对象（默认）
-```
-<bean id="xxx" class="类的路径"></bean>
-```
+    ```
+    <bean id="xxx" class="类的路径"></bean>
+    ```
 * 使用有参构造函数创建对象
-  1) 下标赋值
-  ```
-  <bean id="xxx" class="类的路径">
-    <constructor-arg index="0" value="xxx">
-  </bean>
-  ```
-  2) 参数类型赋值
-   ```
-  <bean id="xxx" class="类的路径">
-    <constructor-arg type="java.lang.String" value="xxx">
-  </bean>
-  ```
-  3) 参数名赋值（用的比较多）
-  ```
-  <bean id="xxx" class="类的路径">
-    <constructor-arg name="参数名" value="xxx">
-  </bean>
-  ```
-其中在配置文件加载的时候，容器中管理的对象已经初始化了。
+  1. 下标赋值
+      ```
+      <bean id="xxx" class="类的路径">
+        <constructor-arg index="0" value="xxx">
+      </bean>
+      ```
+  2. 参数类型赋值
+      ```
+      <bean id="xxx" class="类的路径">
+        <constructor-arg type="java.lang.String" value="xxx">
+      </bean>
+      ```
+  3. 参数名赋值
+      ```
+      <bean id="xxx" class="类的路径">
+        <constructor-arg name="参数名" value="xxx">
+      </bean>
+      ```
+* 使用Set方式注入（最常用）
+  1. 普通值注入
+      ```
+        <bean id="xxx" class="类的路径">
+          <property name="xxx" value="xxx">
+        </bean>
+      ```
+  2. 注入其他bean
+      ```
+      <bean id="bean1" class="类的路径">
+        ...
+      </bean>
+      <bean id="bean2" class="类的路径">
+        <property name="xxx" ref="bean1"></property>
+      </bean>
+      ```
+  3. 注入数组
+      ```
+      <bean id="xxx" class="类的路径">
+        <property name="xxx">
+          <array>
+            <value>aaa</value>
+            <value>bbb</value>
+            ...
+          </array>
+        </property>
+      </bean>
+      ```
+  4. list注入
+      ```
+      <bean id="xxx" class="类的路径">
+        <property name="xxx">
+          <list>
+            <value>list1</value>
+            <value>list2</value>
+            ...
+          </list>
+        </property>
+      </bean>
+      ```
+  5. map注入
+      ```
+      <bean id="xxx" class="类的路径">
+        <property name="xxx">
+          <map>
+            <entry key="xxx" value="xxx"></entry>
+            ...
+          </map>
+        </property>
+      </bean>
+      ```
+  6. prop注入
+      ```
+      <bean id="xxx" class="类的路径">
+        <property name="xxx">
+          <props>
+            <prop key="xxx">xxx</prop>
+            ...
+          </props>
+        </property>
+      </bean>
+      ```
+* 借助@Autowired注解注入（主流用法）
+
+### Spring注解
+除了在xml配置文件配置bean标签，还有一种方式就是使用Spring提供的注解装配bean。
+@Component以及其衍生的@Repository, @Service, @Controller。他们四个的功能都是一样的，后面三个使用起来更具有语义化。
+```
+@Component("User")
+// @Component就相当于在xml文件中的<bean id="user" class="User路径"></bean>
+public class User {
+  ...
+}
+```
+Spring会默认寻找resources下的xml配置文件，一般Spring的配置文件名默认使用applicationContext.xml，使用Spring注解开发，需要在applicationContext.xml添加注解的支持或者添加Spring对包的扫描：
+```
+< context:annotation-config/>
+<!-- 或者 -->
+<context:component-scan base-package=”XX.XX”/> 
+```
+### @Configuration配置类注解代替xml文件
+
+## AOP
+Spring第二个核心知识，面向切面编程。
+
+### 代理模式
+所谓代理，就是你想做的事找别人（中介）帮你做。
+角色分析：
+* 抽象角色：最终想完成的事情，一般使用接口或者抽象类解决
+* 真实角色：被代理的角色
+* 代理角色：代理真实角色，代理真实角色后一般会做一些附属操作
+* 客户：访问代理对象的人
+##### 静态代理
+以租房找中介为例子
+抽象角色-租房Rent接口：
+```
+public interface Rent{
+  public void rent();
+}
+```
+真实角色-房东Host类:
+```
+public Host implements Rent{
+  public void rent() {
+    System.out.println("出租房子");
+  }
+}
+```
+代理角色-proxy:
+```
+public class Proxt implements Rent{
+  
+  private Host host;
+  public Proxy() {}
+  public Proxy(Host host) {
+    this.host = host;
+  }
+
+  //在代理类中实现租房方法 并添加附属操作
+  public void rent () {
+    // 附属操作1：先看房
+    this.seeHouse();
+    // 真实目的：租房
+    host.rent();
+    // 附属操作2：签合同
+    this.hetong();
+    // 附属操作3：中介费
+    this.fee();
+  }
+
+  // 代理类中其他的方法
+
+  // 看房
+  public void seeHouse() {
+    System.out.println("看房");
+  }
+  // 签合同
+  public void hetong(){
+    System.out.println("签合同");
+  }
+  // 中介费
+  public void fee() {
+    System.out.println("中介费");
+  }
+}
+```
+客户-租户Client类：
+```
+public class Client{
+  public static void main (String[] args) {
+    Host host = new Host();
+    // 不直接调用Host的rent方法，而是使用代理对象
+    Proxy proxy = new Proxy(host);
+    proxy.rent();
+  }
+}
+```
+##### 动态代理
+特点：动态代理和静态代理角色一样，只不过动态代理的代理类是动态生成的
+动态代理分为两大类：
+1. 基于接口：直接使用JDK动态代理即可
+新建ProxyInvocationHandler类：
+```
+// 利用这个类自动创建代理类
+public class ProxyInvocationHandler implements InvolcationHandler {
+  // 被代理的接口
+  Private Rent rent;
+
+  public setRent(Rent rent) {
+    this.rent = rent;
+  }
+  // 获取代理类
+  public Object getProxy() {
+    // 接受三个参数
+    // 第一个参数是当前的classLoader
+    // 第二个参数是代理类接口
+    // 第三个参数是InvolcationHandler，当前类是InvolcationHandler的实现类，所以直接传this
+    return Proxy.newProxyInstance(this.getClass().getClassLoader(), rent.getClass().getIntefaces(), this);
+  }
+  // 实现involke方法，处理代理实例，并返回结果
+  @Override
+  public Object involke(Object proxy, Method method, Object[] args) throws Throwable {
+    // 利用反射机制实现 执行代理方法
+    Object result = method.invoke(rent, args);
+    return result;
+  }
+}
+```
+修改Client：
+```
+public class Client{
+  public static void main (String[] args) {
+    // 真实角色
+    Host host = new Host();
+
+    // 从ProxyInvocationHandler获取代理角色
+    ProxyInvocationHandler pih = new ProxyInvocationHandler();
+    pih.setRent(host);
+    Rent proxy = (Rent) pih.getProxy();
+
+    // 执行
+    proxy.rent();
+  }
+}
+```
+1. 基于类：需要借助eglib工具
+   
+2. 基于java字节码：借助javasist工具
+   
+两个重要的类：
+* Proxy
+Proxy提供了创建动态代理类和实例的静态方法，它也是由这些方法创建的所有动态代理类的超类。
+* InvocationHandler
+InvocationHandler是由代理实例的调用处理程序实现的接口。每个代理实例都有一个关联的调用处理程序，当在代理实例上调用方法时，方法调用将被编码并分派到其调用处理程序的invoke方法。
+
+
+
+
+
+  
