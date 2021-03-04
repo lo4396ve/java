@@ -1,11 +1,10 @@
 # 泛型
-### 什么是泛型
+### 泛型基础
 
   泛型是一种类似”模板代码“的技术。如果了解TypeScript，对于泛型应该不会陌生。不了解TypeScript也没关系，泛型一样可以学得会。
 
-
-> **个人理解：**
-如果在JavaScript弱类型语言中，声明一个变量可以直接用JavaScript提供的关键(var与ES6提供的let,const)，比如var a = xxx; 至于变量a是String类型还是Number或者其他类型，取决于对a的赋值xxx,xxx是String类型则a是就是String类型。
+##### 为什么需要泛型
+> 个人理解：如果在JavaScript弱类型语言中，声明一个变量可以直接用JavaScript提供的关键(var与ES6提供的let,const)，比如var a = xxx; 至于变量a是String类型还是Number或者其他类型，取决于对a的赋值xxx,xxx是String类型则a是就是String类型。
 而Java是一种强类型语言，通常无论是定义一个变量还是一个方法，都要指定变量的类型(比如int a = 0)，方法的返回值的类型和方法的参数类型（比如 public String getName(String name)）。
 强类型的优点是不合法的代码无法通过编译，不会导致这种非法代码部署到业务环境中，一定程度上保障了代码的规范性和安全性。但是缺点就是不够灵活。
 
@@ -56,6 +55,71 @@
     Integer n = strList.get(0); // compile error!
     ```
     现在就可以针对不同的类型创建不同的ArrayList，再取ArrayList里面的元素，就不用做强制类型转换了，因为strList只可以存放String类型的数据，floatList只可以存放Float类型的数据。
+
+### 使用的泛型
+##### 泛型类
+```
+class MyObject<K, V> {
+    private K key;
+    private V value;
+
+    public MyObject(K k, V v) {
+        this.key = k;
+        this.value = v;
+    }
+    ...
+    get and set
+    ...
+}
+```
+
+##### 泛型接口
+```
+interface MyInter<E> {
+    public E getData();
+}
+```
+泛型接口的实现分为指定接口泛型类型和不指定泛型接口类型，如果不指定泛型接口，那么实现类也必须是一个泛型类，如果指定泛型接口类型，实现类可以试泛型类也可以不是泛型类。
+
+* 指定泛型接口类型，且实现类不是泛型类
+    ```
+    public class MyInterImpl implements MyInter<Integer> {
+
+        @Override
+        public Integer getData() {
+            return null;
+        }
+    }
+    ```
+* 指定泛型接口类型，且实现类是泛型类
+    ```
+    public class MyInterImpl<E> implements MyInter<String> {
+        private E e;
+
+        @Override
+        public E getData() {
+            return null;
+        }
+
+        public E getE() {
+            return e;
+        }
+    }
+    ```
+    这时候实现类MyInterImpl<E>的泛型只是给调用改实现类的时候使用的，跟泛型接口MyInter<E>没有任何关系
+* 不指定泛型接口类型，实现类也必须是泛型类
+    ```
+    public class MyInterImpl<E> implements MyInter<E> {
+
+        @Override
+        public E getData() {
+            return null;
+        }
+    }
+    ```
+
+
+
 ##### 向上转型
 实际上定义ArrayList的代码是这样的：
 ```
@@ -182,7 +246,7 @@ String s = (String) myclass.getArg();
 #### extends通配符
 
 ##### 为什么需要extends通配符
-虽然Integer是Number的子类，前面向上转型可知ArrayList<Integer>不可以向上转型为ArrayList<Number>，所以ArrayList<Integer>并不是ArrayList<Number>的子类。
+虽然Integer是Number的子类，现在已经知道ArrayList<Integer>不可以向上转型为ArrayList<Number>，所以ArrayList<Integer>并不是ArrayList<Number>的子类。
 
 假如有这么个场景，定义了一个方法，用来计算一个ArrayList列表里面所有元素的和，已知列表每个元素都是Number类型，应该这样定义这个方法：
 
@@ -196,8 +260,8 @@ public static Number reduce(ArrayList<Number> args) {
     return res;
 }
 ```
-然而当使用这个方法的时候会发现，不管传ArrayList<Integer>类型的变量还是
-ArrayList<Long>、ArrayList<Float>都会报错，因为它们三个不是ArrayList<Number>的子类，它们三个都无法向上转型为ArrayList<Number>。
+然而当使用这个方法的时候会发现，不管传ArrayList<Integer>、ArrayList<Long>还是ArrayList<Float>都会报错，因为它们三个不是ArrayList<Number>的子类，它们三个都无法向上转型为ArrayList<Number>。
+
 完整示例：
 
 ```
@@ -225,8 +289,8 @@ public class Demo {
     }
 }
 ```
-
-而实际上这种场景并不少见，要想解决这种问题的办法就是使用extends通配符ArrayList<? extends Number>，这样就可以接受所有Number或者Number子类的泛型（比如ArrayList<Integer>）。
+上面代码只有传ArrayList<Number>不会报错。为了能接受ArrayList<Integer>或者其他ArrayList<Number的子类>，就需要extends通配符来协助了。
+把reduce方法参数改成extends通配符ArrayList<? extends Number>方式，这样就可以接受ArrayList<Number的子类>（比如ArrayList<Integer>）
 
 修改后的代码为：
 ```
@@ -332,8 +396,9 @@ public class Test05 {
 
 总结就是在使用<? extends Number>时，只能确定"?"是Number或者Number的子类，但无法确定"?"到底是哪种类型，所以当对这种类型数据使用set方法时，也无法确定该给set方法传一个什么类型的数据，所以不允许对<? extends Number>类型调用set方法（除非传null）。
 
-
-
+#### super通配符
+##### 为什么需要super通配符
+参考extends通配符例子：
 
 
 
