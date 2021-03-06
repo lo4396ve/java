@@ -1,16 +1,15 @@
 # 泛型
-### 泛型基础
-
-  泛型是一种类似”模板代码“的技术。如果了解TypeScript，对于泛型应该不会陌生。不了解TypeScript也没关系，泛型一样可以学得会。
-
-##### 为什么需要泛型
-> 个人理解：如果在JavaScript弱类型语言中，声明一个变量可以直接用JavaScript提供的关键(var与ES6提供的let,const)，比如var a = xxx; 至于变量a是String类型还是Number或者其他类型，取决于对a的赋值xxx,xxx是String类型则a是就是String类型。
-而Java是一种强类型语言，通常无论是定义一个变量还是一个方法，都要指定变量的类型(比如int a = 0)，方法的返回值的类型和方法的参数类型（比如 public String getName(String name)）。
-强类型的优点是不合法的代码无法通过编译，不会导致这种非法代码部署到业务环境中，一定程度上保障了代码的规范性和安全性。但是缺点就是不够灵活。
 
 
+泛型是一种类似”模板代码“的技术。如果了解TypeScript，对于泛型应该不会陌生。不了解TypeScript也没关系，泛型一样可以学得会。
 
-没有泛型的时候，根据ArrayList的特性应该是这样定义的：
+### 为什么需要泛型
+> **个人理解**：在JavaScript弱类型语言中，声明变量不需要指定变量的类型，变量的类型取决于对赋值的数据类型。
+而Java是一种强类型语言，通常在声明的时候就要指定变量的类型(比如int a = 0)，强类型的优点是保证类型正确，不合法的类型不会通过编译，一定程度上保障了代码的规范性和安全性。缺点就是不够灵活。
+
+
+
+##### 没有泛型的时候，根据ArrayList的特性应该是这样定义的：
 ```
 public class ArrayList {
     /* 
@@ -31,7 +30,7 @@ String first = (String) list.get(0);
 ```
 
 
-如果把ArrayList变成一种模板：ArrayList\<E>：
+##### 把ArrayList变成一种模板：ArrayList\<E>：
 ```
 // E可以是任何一种类型，
 public class ArrayList<E> {
@@ -55,8 +54,8 @@ Integer n = strList.get(0); // compile error!
 
 可以针对不同的类型创建不同的ArrayList，获取元素就不用强制类型转换了，因为strList只可以存放String类型的数据。
 
-##### 向上转型
-实际上定义ArrayList的代码是这样的：
+#### 向上转型
+实际上ArrayList的源码是这样的：
 ```
 public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAccess, Cloneable, java.io.Serializable
   {
@@ -86,7 +85,7 @@ Integer n = numberList.get(1); // ClassCastException! 因为索引1元素是一�
 ```
 
 ### 使用的泛型
-##### 泛型类
+#### 泛型类
 ```
 class MyObject<K, V> {
     private K key;
@@ -102,7 +101,7 @@ class MyObject<K, V> {
 }
 ```
 
-##### 泛型接口
+#### 泛型接口
 ```
 interface MyInter<E> {
     public E getData();
@@ -147,7 +146,7 @@ interface MyInter<E> {
     }
     ```
 
-##### 泛型方法
+#### 泛型方法
 泛型方法可以存在于泛型类中，也可以在普通类中定义泛型方法。泛型方法规则：
 
 ```
@@ -292,11 +291,11 @@ String s = (String) myclass.getArg();
 ```
 
 基于擦拭法的特性，泛型有以下几种限制：
-1. 泛型\<E>不能是基本类型（例如int），因为实际类型是Object，Object类型无法持有基本类型
+1. **泛型\<E>不能是基本类型（例如int），因为实际类型是Object，Object类型无法持有基本类型**
     ```
     ArrayList<int> list = new ArrayList<int>(); // compile error!
     ```
-2. 无法获取带泛型实例的Class
+2. **无法获取带泛型实例的Class**
 
     由于擦拭法，ArrayList\<E>中E是Object，所以ArrayList\<String>和ArrayList\<Integer>经过编译都会变成ArrayList\<Object>，所以假设能获取泛型的Class，则对ArrayList\<String>和ArrayList\<Integer>获取class时，获取的是同一个class。
     假设能获取泛型的Class：
@@ -308,7 +307,7 @@ String s = (String) myclass.getArg();
     // 事实上strList.getClass()就会编译错误。
     ```
     
-3. 无法获取带泛型的Class
+3. **无法获取带泛型的Class**
    无法获取ArrayList\<String>.class，这么写代码也不会通过编译，只能获取ArrayList.class，所以也无法判断带泛型的类型，比如:
    ```
     ArrayList<String> strlist = new ArrayList<String>();
@@ -316,7 +315,7 @@ String s = (String) myclass.getArg();
     System.out.println(strlist instanceof ArrayList); // 这样写是合法的 且打印结果为：true
    ```
 
-4. 不能直接实例化E类型
+4. **不能直接实例化E类型**
    
    ```
     // 定义带泛型的类MyClass<E>
@@ -502,8 +501,154 @@ public class Test05 {
 
 #### super通配符
 ##### 为什么需要super通配符
-参考extends通配符例子：
+假设有这样的场景，把一个存放Number类型的ArrayList元素写入到磁盘文件：
+
+```
+public class Demo<E> {
+    // 写入磁盘的方法
+    public static void write(ArrayList<Number> list) {
+        for (Object obj : list) {
+            System.out.println(obj);
+            // 模拟写入
+        }
+    }
+
+    public static void main(String[] args) {
+        // Number类型
+        ArrayList<Number> numList = new ArrayList<Number>();
+        Number num = 1;
+        numList.add(num);
+        write(numList);
+    }
+}
+```
+随着需求变更，现在需要写入其他类型（比如Object类型），显然上面的实例是不支持的。可以利用super通配符实现改功能：
+```
+public class Demo<E> {
+
+    public static void write(ArrayList<? super Number> list) {
+        for (Object obj : list) {
+            System.out.println(obj);
+            // 模拟写入
+        }
+    }
+
+    public static void main(String[] args) {
+        // Number类型
+        ArrayList<Number> numList = new ArrayList<Number>();
+        Number num = 1;
+        numList.add(num);
+        write(numList);
+
+        // String类型
+        ArrayList<Object> objList = new ArrayList<Object>();
+        String str = "hello";
+        objList.add(str);
+        write(objList);
+    }
+
+}
+
+```
+\<? super Number>支持所有Number的父类，声明ArrayList\<Object>指定泛型类型是Object，Object是Number的父类，所以代码可以正常运行。
+虽然String str = "hello"是String类型，ArrayList\<Object>指定了泛型类型Object，String类型可以向上转型为Object。
+
+##### super通配符的set方法
+假设需求变成在写入之前先判断元素是不是null，如果是null则把元素值设为0否则设为1，并且0和1都是Number类型，需要对write进一步扩展：
+```
+public static void write(ArrayList<? super Number> list) {
+    for(int i = 0; i < list.size(); i++) {
+        System.out.println(list.get(i));
+        Number num;
+        if(list.get(i) == null) {
+            num = 0;
+            list.set(i, num);
+        }else {
+            num = 1;
+            list.set(i, num);
+        }
+        // 模拟写入
+    }
+}
+```
+
+参考ArrayList以及其set方法的源码：
+```
+public class ArrayList<E> extends AbstractList<E>
+        implements List<E>, RandomAccess, Cloneable, java.io.Serializable
+{
+    ...
+    public E set(int index, E element) {
+        rangeCheck(index);
+
+        E oldValue = elementData(index);
+        elementData[index] = element;
+        return oldValue;
+    }
+    ...
+}
+```
+
+已知write传入的是ArrayList<? super Number>类型，所以ArrayList的set方法签名实际上是：
+```
+public <? super Number> set(int index, <? super Number> element) {
+    ...
+}
+```
+所以set的第二个参数element接受Number类型。
 
 
+##### super通配符的get方法
+
+加入在write方法for循环中想获取元素：
+```
+public static void write(ArrayList<? super Number> list) {
+    for(int i = 0; i < list.size(); i++) {
+        Number item = list.get(i);  // error
+        // 模拟写入
+    }
+}
+```
+Number item = list.get(i)会报编译错误。
+
+参考ArrayList以及其get方法的源码：
+```
+public class ArrayList<E> extends AbstractList<E>
+        implements List<E>, RandomAccess, Cloneable, java.io.Serializable
+{
+    ...
+    public E get(int index) {
+        rangeCheck(index);
+
+        return elementData(index);
+    }
+    ...
+}
+
+```
+已知write传入的是ArrayList<? super Number>类型，所以ArrayList的get方法签名实际上是：
+```
+public <? super Number> get(int index) {
+    ...
+}
+```
+get返回值类型是Number或者Number的父类（比如Object类型）,因此无法使用Number类型来接收get()的返回值。
+唯一可以接受get()返回值的是Object类型：
+
+```
+Object item = list.get(i);  // OK
+```
+
+#### 对比extends和super通配符
+\<? extends E>类型和<? super E>类型的区别在于：
+* \<? extends E>允许调用读方法E get()获取E的引用，但不允许调用写方法set(E)传入E的引用（传入null除外）
+* \<? super E>允许调用写方法set(E)传入E的引用，但不允许调用读方法E get()获取E的引用（获取Object除外）
+
+一个是允许读不允许写，另一个是允许写不允许读。
+
+#### 无限定通配符
+无限定通配符，即只定义一个?。无线定通配符不允许调用set(E)方法并传入引用（null除外），也不允许调用E get()方法并获取E引用（除非用Object引用）。既不能读，也不能写，只能做一些null判断。
+
+无限定通配符有一个独特的特点，就是：ArrayList<?>是所有ArrayList<E>的超类。
 
 
