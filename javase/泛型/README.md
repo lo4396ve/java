@@ -1,7 +1,7 @@
 # 泛型
 
 
-泛型是一种类似”模板代码“的技术。如果了解TypeScript，对于泛型应该不会陌生。不了解TypeScript也没关系，泛型一样可以学得会。
+泛型是一种类似”模板代码“的技术。如果了解TypeScript，对泛型应该不会陌生。
 
 ### 为什么需要泛型
 > **个人理解**：在JavaScript弱类型语言中，声明变量不需要指定变量的类型，变量的类型取决于对赋值的数据类型。
@@ -84,7 +84,7 @@ numberList.add(new Float(1.1));
 Integer n = numberList.get(1); // ClassCastException! 因为索引1元素是一个Float类型数据，Float不可以转型为Integer。
 ```
 
-### 使用的泛型
+### 泛型的用法
 #### 泛型类
 ```
 class MyObject<K, V> {
@@ -107,7 +107,9 @@ interface MyInter<E> {
     public E getData();
 }
 ```
-泛型接口的实现分为指定接口泛型类型和不指定泛型接口类型，如果不指定泛型接口，那么实现类也必须是一个泛型类，如果指定泛型接口类型，实现类可以试泛型类也可以不是泛型类。
+实现泛型接口可以指定接口泛型类型，也可以不指定泛型接口类型。
+如果不指定泛型接口，那么实现类也必须是一个泛型类。
+如果指定泛型接口类型，实现类可以试泛型类也可以不是泛型类。
 
 * 指定泛型接口类型，且实现类不是泛型类
     ```
@@ -121,6 +123,7 @@ interface MyInter<E> {
     ```
 * 指定泛型接口类型，且实现类是泛型类
     ```
+    
     public class MyInterImpl<E> implements MyInter<String> {
         private E e;
 
@@ -133,8 +136,12 @@ interface MyInter<E> {
             return e;
         }
     }
+    /*
+    实现类MyInterImpl<E>的泛型只是给调用该实现类（new MyInterImpl<String>）的时候使用的；
+    已经跟泛型接口MyInter<E>没有任何关系了。
+    */
     ```
-    这时候实现类MyInterImpl\<E>的泛型只是给调用改实现类的时候使用的，跟泛型接口MyInter\<E>没有任何关系
+    
 * 不指定泛型接口类型，实现类也必须是泛型类
     ```
     public class MyInterImpl<E> implements MyInter<E> {
@@ -204,7 +211,7 @@ public class Demo<E> {
 }
 ```
 
-为什么需要泛型方法？观察以下示例：
+###### 为什么需要泛型方法？观察下面的代码：
 ```
 public class Demo<E> {
 
@@ -228,35 +235,39 @@ public class Demo<E> {
     }
 
     public static void main(String[] args) {
+        // 泛型类实例化要指定泛型类型，指定strList为Demo<String>类型。
         ArrayList<String> strList = new ArrayList<String>();
         strList.add("hello");
+        // 指定intList为Demo<Integer>类型。
         ArrayList<Integer> intList = new ArrayList<Integer>();
         intList.add(1);
 
-        Demo<String> demo = new Demo<String>();
-        demo.fn1(strList);
-        demo.fn1(intList);
-
+        // fn2的参数ArrayList<E>受类实例化new Demo<String>限制，
+        // 只接受ArrayList<String>类型参数。
         demo.fn2(strList);
         demo.fn2(intList);  // error
+
+        // fn3指定了参数类型ArrayList<Integer>，
+        // 所以只接受ArrayList<Integer>类型参数。
 
         demo.fn3(strList);  // error
         demo.fn3(intList);
 
+        
+        // fn1泛型方法就没有这些局限性了，取决于参数传的类型，使用更加灵活。
+        Demo<String> demo = new Demo<String>();
+        demo.fn1(strList);
+        demo.fn1(intList);
+
     }
 }
 ```
-泛型类实例化要指定泛型类型，示例中实例化Demo类时指定了Demo\<String>。
-fn2的参数ArrayList\<E>受Demo\<String>实例化限制，只能接受ArrayList\<String>类型参数。
-fn3指定了参数类型ArrayList\<Integer>，所以只接受ArrayList\<Integer>类型参数。
-fn1泛型方法就没有这些局限性了，取决于参数传的类型，使用更加灵活。
-
 
 ### 擦拭法
 Java语言的泛型实现方式是擦拭法，擦拭法是指虚拟机对泛型其实一无所知，所有的工作都是编译器做的。Java中的泛型仅仅是给编译器javac使用的，确保数据安全性和免去类型强制转换，一旦编译完成，所有和泛型相关的类型全部擦除。
 Java的泛型是由编译器在编译时实行的，编译器内部永远把所有类E视为Object处理，但是，在需要转型的时候，编译器会根据E的类型自动为我们实行安全地强制转型。
 
-如果定义一个泛型类MyClass\<E>，我们和编译器看到的代码是这样的：
+如果定义一个泛型类MyClass\<E>，编译器看到的代码是这样的：
 ```
 public class MyClass<E> {
   private E arg;
@@ -292,12 +303,14 @@ String s = (String) myclass.getArg();
 
 基于擦拭法的特性，泛型有以下几种限制：
 1. **泛型\<E>不能是基本类型（例如int），因为实际类型是Object，Object类型无法持有基本类型**
+
     ```
     ArrayList<int> list = new ArrayList<int>(); // compile error!
     ```
 2. **无法获取带泛型实例的Class**
 
-    由于擦拭法，ArrayList\<E>中E是Object，所以ArrayList\<String>和ArrayList\<Integer>经过编译都会变成ArrayList\<Object>，所以假设能获取泛型的Class，则对ArrayList\<String>和ArrayList\<Integer>获取class时，获取的是同一个class。
+    由于擦拭法，ArrayList\<E>中E是Object，所以ArrayList\<String>和ArrayList\<Integer>经过编译都会变成ArrayList\<Object>，所以假设能获取泛型的Class，则ArrayList\<String>和ArrayList\<Integer>获取的class是同一个。
+    
     假设能获取泛型的Class：
     ```
     ArrayList<String> strList = new ArrayList<String>();
@@ -308,7 +321,9 @@ String s = (String) myclass.getArg();
     ```
     
 3. **无法获取带泛型的Class**
-   无法获取ArrayList\<String>.class，这么写代码也不会通过编译，只能获取ArrayList.class，所以也无法判断带泛型的类型，比如:
+
+   无法获取ArrayList\<String>.class，这么写代码也不会通过编译，只能获取ArrayList.class，所以也无法判断带泛型的类型:
+
    ```
     ArrayList<String> strlist = new ArrayList<String>();
     System.out.println(strlist instanceof ArrayList<String>); // 这样写编译器会报错
@@ -346,10 +361,10 @@ String s = (String) myclass.getArg();
     }
    ```
 
-### 通配符
-#### extends通配符
 
-##### 为什么需要extends通配符
+### extends通配符
+
+#### 为什么需要extends通配符
 虽然Integer是Number的子类，现在已经知道ArrayList\<Integer>不可以向上转型为ArrayList\<Number>，所以ArrayList\<Integer>并不是ArrayList\<Number>的子类。
 
 假如有这么个场景，定义了一个方法，用来计算一个ArrayList列表里面所有元素的和，已知列表每个元素都是Number类型，应该这样定义这个方法：
@@ -420,7 +435,7 @@ public class Demo {
 
 这种声明泛型的方式<? extends Number>的方式成为上界统通配符，也叫上限通配符，它把泛型E的类型的上限定在了Number，只接受Number或者其子类。
 
-##### extends通配符的get方法
+#### extends通配符的get方法
 
 由于ArrayList<? extends Number>可以接受Number或者其子类，而无法确定到底是Integer类型还是Float类型或者是Long类型，所以获取ArrayList<? extends Number>的元素，类型也应该是Number类型：
 ```
@@ -428,7 +443,7 @@ Number item = args.get(0);  // 正常
 Integer item = args.get(0); // error，因为无法确定获取的元素一定是Integer类型，如果元素是Float类型，会导致转型错误，为了避免这种错误发生，直接在编辑器中就会提示错误
 ```
 
-##### extends通配符的set方法
+#### extends通配符的set方法
 
 如果有这种场景，需要把列表中的每个元素都变成0，则需要添加一个遍历列表并对每个元素设置值的方法：
 
@@ -499,8 +514,8 @@ public class Test05 {
 
 总结就是在使用<? extends Number>时，只能确定"?"是Number或者Number的子类，但无法确定"?"到底是哪种类型，所以当对这种类型数据使用set方法时，也无法确定该给set方法传一个什么类型的数据，所以不允许对<? extends Number>类型调用set方法（除非传null）。
 
-#### super通配符
-##### 为什么需要super通配符
+### super通配符
+#### 为什么需要super通配符
 假设有这样的场景，把一个存放Number类型的ArrayList元素写入到磁盘文件：
 
 ```
@@ -553,7 +568,7 @@ public class Demo<E> {
 \<? super Number>支持所有Number的父类，声明ArrayList\<Object>指定泛型类型是Object，Object是Number的父类，所以代码可以正常运行。
 虽然String str = "hello"是String类型，ArrayList\<Object>指定了泛型类型Object，String类型可以向上转型为Object。
 
-##### super通配符的set方法
+#### super通配符的set方法
 假设需求变成在写入之前先判断元素是不是null，如果是null则把元素值设为0否则设为1，并且0和1都是Number类型，需要对write进一步扩展：
 ```
 public static void write(ArrayList<? super Number> list) {
@@ -598,7 +613,7 @@ public <? super Number> set(int index, <? super Number> element) {
 所以set的第二个参数element接受Number类型。
 
 
-##### super通配符的get方法
+#### super通配符的get方法
 
 加入在write方法for循环中想获取元素：
 ```
@@ -646,7 +661,7 @@ Object item = list.get(i);  // OK
 
 一个是允许读不允许写，另一个是允许写不允许读。
 
-#### 无限定通配符
+### 无限定通配符
 无限定通配符，即只定义一个?。无线定通配符不允许调用set(E)方法并传入引用（null除外），也不允许调用E get()方法并获取E引用（除非用Object引用）。既不能读，也不能写，只能做一些null判断。
 
 无限定通配符有一个独特的特点，就是：ArrayList<?>是所有ArrayList<E>的超类。
