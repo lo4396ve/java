@@ -1,5 +1,9 @@
-## Spring
-Spring是一个轻量级的控制反转（IOC）和面向切面编程（AOP）的框架。
+# Spring
+Spring是一个轻量级的控制反转（IOC）和面向切面编程（AOP）的框架。本文主要针对IOC和AOP展开学习。
+###### Spring工作方式
+> 个人理解：
+Spring是一个封装了很多功能（比如IOC、AOP）的框架，通过读取配置文件（默认叫applicationContext.xml）控制Spring完成相关操作。
+对于开发者来说只需要按照Spring的规范去编写配置文件。所以对于一个应用来说，Spring帮助把一些逻辑从业务代码中抽离到配置文件，有些场景下只需要修改配置文件就可以完成需求，而不用直接去修改业务代码，使得应用更方便维护。
 **特点：**
 * 非侵入式，指的是引入Spring不会侵入到业务代码，不用继承框架提供的类，而是通过配置完成依赖注入后，就可以使用
 * 轻量级
@@ -8,7 +12,7 @@ Spring是一个轻量级的控制反转（IOC）和面向切面编程（AOP）�
 * 支持事务
 
 ## 核心模块
-spring包括七大核心模块：
+spring七大核心模块：
 
 **核心容器（Spring Core）**
 核心容器提供Spring框架的基本功能。Spring以bean的方式组织和管理Java应用中的各个组件及其关系。Spring使用BeanFactory来产生和管理Bean，它是工厂模式的实现。BeanFactory使用控制反转(IoC)模式将应用的配置和依赖性规范与实际的应用程序代码分开。
@@ -31,117 +35,43 @@ Web上下文模块建立在应用程序上下文模块之上，为基于web的�
 **MVC模块（Spring Web MVC）**
 MVC框架是一个全功能的构建Web应用程序的MVC实现。通过策略接口，MVC框架变成为高度可配置的。MVC容纳了大量视图技术，其中包括JSP、POI等，模型来有JavaBean来构成，存放于m当中，而视图是一个街口，负责实现模型，控制器表示逻辑代码，由c的事情。Spring框架的功能可以用在任何J2EE服务器当中，大多数功能也适用于不受管理的环境。Spring的核心要点就是支持不绑定到特定J2EE服务的可重用业务和数据的访问的对象，毫无疑问这样的对象可以在不同的J2EE环境，独立应用程序和测试环境之间重用。
 
-## 核心概念
 ### IOC控制反转
-IOC是一种编程思想，目的是为了降低程序耦合。就是把创建对象交给Spring去做，业务程序不创建对象只接搜对象。
+所谓IOC就是把创建示例对象（new 一个类）这件事交给Spring去做，然后并把创建好的对象放到Spring容器，使用的时候从Spring容器中取。
+IOC是一种编程思想，目的是为了降低程序耦合。
 
-##### 原理分析：
-（1）从一个demo来理解IOC思想，假如有个User实体类，UserDao接口，UserDaoImpl实现类，UserServer接口，UserServiceImpl实现类以及一个UserTest测试类。
-
-UserDao:
-```
-public interface UserDao {
-  String getUserName();
-}
-```
-UserDaoMysqlImpl:
-```
-public class UserDaoImpl implements UserDao{
-  @Override
-  punlic String getUserName() {
-    System.out.println("Mysql方式获取用户名")
-  }
-}
-```
-UserServer:
-```
-public interface UserService {
-  String getUserName();
-}
-```
-UserServiceImpl:
-```
-public class UserServiceImpl implements UserService{
-  private UserDao userDao = new UserDaoMysqlImpl();
-  @Override
-  public String getUserName() {
-      return userDao.getUserName();
-  }
-}
-```
-UserTest:
-```
-public class UserTest {
-  public static void main(String[] args) {
-    UserService userService = new UserServiceImpl();
-    userService,getUserName();
-  }
-}
-```
-（2）上面代码是一个简单的查询用户名的demo。正常运行是没有问题的。如果现在要加一个Oracle查询的方式，需要对UserDao添加一个UserDaoOracleImpl实现类。
-UserDaoOracleImpl：
-```
-@Override
-  punlic String getUserName() {
-    System.out.println("Oracle方式获取用户名")
-  }
-```
-
-然后还需要手动到业务层UserServiceImpl修改代码：
-```
-public class UserServiceImpl implements UserService{
-  private UserDao userDao = new UserDaoOracleImpl();
-  @Override
-  public String getUserName() {
-      return userDao.getUserName();
-  }
-}
-```
-（3）如果还有更多的方式去获取用户名字，每次都要手动修改业务层代码。现在把UserServiceImpl改成下面这样：
-```
-public class UserServiceImpl implements UserService{
-  private UserDao userDao
-
-  public void setUserDao(UserDao userDao) {
-    this.userDao = userDao;
-  }
-
-  @Override
-  public String getUserName() {
-      return userDao.getUserName();
-  }
-}
-```
-UserTest也改一下：
-```
-public class UserTest {
-  public static void main(String[] args) {
-    UserService userService = new UserServiceImpl();
-
-    userService .setUserDao(new UserDaoOracleImpl())
-
-    userService,getUserName();
-  }
-}
-```
-
-其实只是把new UserDaoOracleImpl()这一步骤从业务层UserService中脱离出来放到了UserTest中去执行，但是从设计模式的角度考虑，现在已经降低了业务层的耦合度。这就是IOC的一个思想。
-
-Spring做的就是把new一个对象交给spring去做，业务不需要去做这个事情，只需要关心业务逻辑。
-
-（4）Spring配置文件里面的\<bean\>标签就是用来做这个事的，一个正常的\<bean\>标签大致长这个样子：
+##### 认识bean标签
+applicationContext.xml配置文件中的\<bean>标签是用来告诉哪些类需要交给Spring管理，相当于是一个注册（装配）过程。
+一个正常的\<bean\>标签大致长这个样子：
 ```
 <beans>
   <bean id="mybean" class="某个类">
-    <property name="对应该类中的某个set方法" value="想要设置的值">
+    <!-- 依赖注入 -->
+    ...
   </bean>
 </beans>
 ```
-所有被\<bean\>标签配置的类都会放到Spring容器，什么时候想用这个类的实例对象，只需要从Spring容器中取，而不用自己去new实例对象。这就是Spring的IOC思想。
+### 依赖注入（DI）
+通常情况创建对象（new 一个类）希望初始化实例数据，主要通过构造方法和set方法两种方式初始化。
+```
+// User.java
+public class User() {
+  private String name;
+  public User(name) {
+    this.name = name
+  }
+  public String setName(name) {
+    this.name = name;
+  }
+}
 
-### Spring创建对象的方式
-也就是依赖注入方式(DI)：
-##### 一、使用构造器注入
+// Main.java
+public static void main(String[] args) {
+  User user = new User("张三");
+  user.setName("李四");
+}
+```
+已知IOC是Spring也是帮我们创建实例对象的，那么他支持这两种方式初始化实例对象数据（以及更常用的注解方式），初始化实例对象数据的过程也就是所说的依赖注入(DI)：
+#### 一、使用构造器注入
 * 使用无参构造函数创建对象（默认）
     ```
     <bean id="xxx" class="类的路径"></bean>
@@ -165,220 +95,343 @@ Spring做的就是把new一个对象交给spring去做，业务不需要去做�
         <constructor-arg name="参数名" value="xxx">
       </bean>
       ```
-* 使用Set方式注入（最常用）
-  1. 普通值注入
-      ```
-        <bean id="xxx" class="类的路径">
-          <property name="xxx" value="xxx">
-        </bean>
-      ```
-  2. 注入其他bean
-      ```
-      <bean id="bean1" class="类的路径">
-        ...
-      </bean>
-      <bean id="bean2" class="类的路径">
-        <property name="xxx" ref="bean1"></property>
-      </bean>
-      ```
-  3. 注入数组
-      ```
-      <bean id="xxx" class="类的路径">
-        <property name="xxx">
-          <array>
-            <value>aaa</value>
-            <value>bbb</value>
-            ...
-          </array>
-        </property>
-      </bean>
-      ```
-  4. list注入
-      ```
-      <bean id="xxx" class="类的路径">
-        <property name="xxx">
-          <list>
-            <value>list1</value>
-            <value>list2</value>
-            ...
-          </list>
-        </property>
-      </bean>
-      ```
-  5. map注入
-      ```
-      <bean id="xxx" class="类的路径">
-        <property name="xxx">
-          <map>
-            <entry key="xxx" value="xxx"></entry>
-            ...
-          </map>
-        </property>
-      </bean>
-      ```
-  6. prop注入
-      ```
-      <bean id="xxx" class="类的路径">
-        <property name="xxx">
-          <props>
-            <prop key="xxx">xxx</prop>
-            ...
-          </props>
-        </property>
-      </bean>
-      ```
-* 借助@Autowired注解注入（主流用法）
+#### 二、使用Set方式注入
+
+* 普通值注入
+   ```
+     <bean id="xxx" class="类的路径">
+       <property name="xxx" value="xxx">
+     </bean>
+   ```
+* 注入其他bean
+   ```
+   <bean id="bean1" class="类的路径">
+     ...
+   </bean>
+   <bean id="bean2" class="类的路径">
+     <property name="xxx" ref="bean1"></property>
+   </bean>
+   ```
+* 注入数组
+   ```
+   <bean id="xxx" class="类的路径">
+     <property name="xxx">
+       <array>
+         <value>aaa</value>
+         <value>bbb</value>
+         ...
+       </array>
+     </property>
+   </bean>
+   ```
+* list注入
+   ```
+   <bean id="xxx" class="类的路径">
+     <property name="xxx">
+       <list>
+         <value>list1</value>
+         <value>list2</value>
+         ...
+       </list>
+     </property>
+   </bean>
+   ```
+* map注入
+   ```
+   <bean id="xxx" class="类的路径">
+     <property name="xxx">
+       <map>
+         <entry key="xxx" value="xxx"></entry>
+         ...
+       </map>
+     </property>
+   </bean>
+   ```
+* prop注入
+   ```
+   <bean id="xxx" class="类的路径">
+     <property name="xxx">
+       <props>
+         <prop key="xxx">xxx</prop>
+         ...
+       </props>
+     </property>
+   </bean>
+   ```
+
+第三种方式注解注入，参考下一章：Spring注解。
 
 ### Spring注解
-除了在xml配置文件配置bean标签，还有一种方式就是使用Spring提供的注解装配bean。
-@Component以及其衍生的@Repository, @Service, @Controller。他们四个的功能都是一样的，后面三个使用起来更具有语义化。
+之前所说的都是在xml配置文件中实现bean的装配和依赖注入。除了在xml配置文件配置bean标签，还有一种更主流的方式就是使用Spring提供的注解装配和注入bean。
+**用于装配的注解**
+Spring提供了很多用来装配的注解，其中比较常用的有@Component、@Repository、@Service和@Controlle，他们四个的功能是一样的，都是用来完成类的装配工作，也就是代替了\<bean>标签的作用。后面三个都是@Component衍生而来的，使用起来更具有语义化。
+**用于依赖注入的注解**
+Spring也提供了很多用于依赖注入的注解，其中比较常用的有@Autowired和@Resource。
+
+##### 如何使用注解：
+
+还是要创建一个Spring的配置文件applicationContext.xml，要想注解生效，需要在xml配置添加注解的支持\<context:annotation-config/>，或者添加Spring对业务包的扫描配置\<context:component-scan base-package=”XX.XX”/> 。不再需要编写繁琐的\<bean>标签。
 ```
-@Component("User")
-// @Component就相当于在xml文件中的<bean id="user" class="User路径"></bean>
-public class User {
-  ...
+applicationContext.xml
+
+<!-- 注解支持配置 -->
+<context:annotation-config/>
+<!-- 或者Spring扫描指定包配置-->
+<context:component-scan base-package=”com.demo.xxx”/> 
+```
+
+开发业务代码：
+
+```
+// UserEntity.java
+public class UserEntity implements Serializable {
+    private Long id;
+    private String username;
+    private String password;
+    ...
+    get/set方法
+    ...
+}
+
+// UserDao.java
+@Repository("UserDao") // 该注解完成UserDao类的装配
+public interface UserDao {
+    List<UserEntity> findAllUser();
+    String findPasswordByName(@Param("username")String username);
+}
+
+// UserService.java
+public interface UserService {
+    List<UserEntity> findAllUser();
+    String findPasswordByName(String username);
+}
+
+// UserServiceImpl.java
+@Service("UserService")
+public class UserServiceImpl implements UserService {
+    // 只声明userDao的类型，@Resource默认根据变量名字从Spring容器匹配对应的类，并完成注入
+    @Resource // 该注解会根据声明的变量名
+    private UserDao userDao;
+    
+    @Override
+    public List<UserEntity> findAllUser() {
+        return userDao.findAllUser();
+    }
+
+    @Override
+    public String findPasswordByName(String username) {
+        return userDao.findPasswordByName(username);
+    }
+}
+
+// UserController.java
+@Controller
+public class UserController {
+    // 只声明userService类型，@Autowired默认根据类型从Spring容器匹配对应的类完成注入
+    @Autowired
+    private UserService userService;
+
+    @RequestMapping("/userlist")
+    @ResponseBody
+    public List<UserEntity> getAllUser() {
+        return userService.findAllUser();
+    }
 }
 ```
-Spring会默认寻找resources下的xml配置文件，一般Spring的配置文件名默认使用applicationContext.xml，使用Spring注解开发，需要在applicationContext.xml添加注解的支持或者添加Spring对包的扫描：
-```
-< context:annotation-config/>
-<!-- 或者 -->
-<context:component-scan base-package=”XX.XX”/> 
-```
+
+
 ### @Configuration配置类注解代替xml文件
 
-## AOP
-Spring第二个核心知识，面向切面编程。
+## 代理模式
 
-### 代理模式
-所谓代理，就是你想做的事找别人（中介）帮你做。
-角色分析：
-* 抽象角色：最终想完成的事情，一般使用接口或者抽象类解决
-* 真实角色：被代理的角色
-* 代理角色：代理真实角色，代理真实角色后一般会做一些附属操作
-* 客户：访问代理对象的人
-##### 静态代理
+为了更好的理解AOP，先了解一下什么是代理模式。
+什么是代理：房屋中介（不解释）
+### 静态代理
 以租房找中介为例子
-抽象角色-租房Rent接口：
+给租房这件事定义一个接口：
 ```
-public interface Rent{
-  public void rent();
+public interface Rent {
+    public void rent(String name);
 }
 ```
-真实角色-房东Host类:
+房子House:
 ```
-public Host implements Rent{
-  public void rent() {
-    System.out.println("出租房子");
-  }
+class House implements Rent{
+    private String houseName;
+    public House(String name) {
+        this.houseName = name;
+    }
+    @Override
+    public void rent(String houseName) {
+        System.out.println("房子:" + houseName + "被租出去了");
+    }
 }
 ```
-代理角色-proxy:
+中介proxy:
 ```
-public class Proxt implements Rent{
+public class Proxy implements Rent{
   
-  private Host host;
+  private House house;
   public Proxy() {}
-  public Proxy(Host host) {
-    this.host = host;
+  public Proxy(House house) {
+    this.house = house;
   }
 
-  //在代理类中实现租房方法 并添加附属操作
-  public void rent () {
-    // 附属操作1：先看房
-    this.seeHouse();
-    // 真实目的：租房
-    host.rent();
-    // 附属操作2：签合同
-    this.hetong();
-    // 附属操作3：中介费
-    this.fee();
-  }
-
-  // 代理类中其他的方法
-
-  // 看房
-  public void seeHouse() {
-    System.out.println("看房");
-  }
-  // 签合同
-  public void hetong(){
+  // 中介实现租房方法
+  public void rent (String houseName) {
+    // 谈价格
+    System.out.println("谈价格");
+    // 租房
+    house.rent(houseName);
+    // 租房之后签合同
     System.out.println("签合同");
   }
-  // 中介费
-  public void fee() {
-    System.out.println("中介费");
-  }
+ 
 }
 ```
-客户-租户Client类：
+租户Client：
 ```
 public class Client{
   public static void main (String[] args) {
-    Host host = new Host();
-    // 不直接调用Host的rent方法，而是使用代理对象
-    Proxy proxy = new Proxy(host);
-    proxy.rent();
+    // 寻找想租的房子
+    String houseName = "别墅一号";
+    House house = new House(houseName);
+    // 寻找中介，把想租的房子告诉（传值）他
+    Proxy proxy = new Proxy(house);
+    // 执行中介的租房子方法，中介会帮客户谈价格和签合同
+    proxy.rent(houseName);
   }
 }
 ```
-##### 动态代理
-特点：动态代理和静态代理角色一样，只不过动态代理的代理类是动态生成的
+### 动态代理
+静态代理的缺点：不同的场景需要定义不同的代理类，如果换成办卡业务场景，需要再定义一个办卡代理类（CardProxy）
+动态代理特点：动态代理的代理类是动态生成的，不需要手动声明。
 动态代理分为两大类：
-1. 基于接口：直接使用JDK动态代理即可
+#### 基于接口：借助JDK动态代理
+    两个重要的工具：
+    * Proxy类：动态代理的代理类是动态生成的，而Proxy则提供了创建动态代理类方法
+    * InvocationHandler接口：只提供了一个invoke方法，并在该方法内利用反射执行被代理对象真实的方法。
+
+
+动态代理只是帮助动态生成代理类（中介）。继续使用静态代理声明的Rent和House。
+
 新建ProxyInvocationHandler类：
 ```
 // 利用这个类自动创建代理类
-public class ProxyInvocationHandler implements InvolcationHandler {
-  // 被代理的接口
-  Private Rent rent;
+public class MyInvocation implements InvocationHandler {
+    // 声明被代理的目标对象（比如该业务场景下为House房子）
+    private Object target;
+    public void setTarget(Object target) {
+        this.target = target;
+    }
 
-  public setRent(Rent rent) {
-    this.rent = rent;
-  }
-  // 获取代理类
-  public Object getProxy() {
-    // 接受三个参数
-    // 第一个参数是当前的classLoader
-    // 第二个参数是代理类接口
-    // 第三个参数是InvolcationHandler，当前类是InvolcationHandler的实现类，所以直接传this
-    return Proxy.newProxyInstance(this.getClass().getClassLoader(), rent.getClass().getIntefaces(), this);
-  }
-  // 实现involke方法，处理代理实例，并返回结果
-  @Override
-  public Object involke(Object proxy, Method method, Object[] args) throws Throwable {
-    // 利用反射机制实现 执行代理方法
-    Object result = method.invoke(rent, args);
-    return result;
-  }
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        // 附加操作
+        System.out.println("附加操作");
+        // 真正目的：执行被代理接口的方法
+        Object result = method.invoke(target, args);
+        return result;
+    }
 }
 ```
 修改Client：
 ```
-public class Client{
-  public static void main (String[] args) {
-    // 真实角色
-    Host host = new Host();
+public class Client {
+    public static void main(String[] args) {
+        // 获取想租的房子
+        String houseName = "别墅一号";
+        House house = new House(houseName);
 
-    // 从ProxyInvocationHandler获取代理角色
-    ProxyInvocationHandler pih = new ProxyInvocationHandler();
-    pih.setRent(host);
-    Rent proxy = (Rent) pih.getProxy();
+        // 获取InvocationHandler实例
+        MyInvocation myInvocation = new MyInvocation();
+        // 设置代理对象（想要租的房子）
+        myInvocation.setTarget(house);
 
-    // 执行
-    proxy.rent();
-  }
+        // 使用newProxyInstance方法动态创建代理对象
+        Rent proxy = (Rent) Proxy.newProxyInstance(house.getClass().getClassLoader(), house.getClass().getInterfaces(), myInvocation);
+
+        // 由代理去执行租房子这件事
+        proxy.rent(houseName);
+
+    }
 }
 ```
-1. 基于类：需要借助eglib工具
+###### 注意：
+* 第一个需要注意的就是newProxyInstance方法：
+  ```
+  /**
+  * newProxyInstance: Returns an instance of a 
+  * proxy class for the specified interfaces that
+  * dispatches method invocations to the specified invocation handler.
+  *
+  *
+  * @param classLoader: the class loader to define the proxy class
+  * @param interfaces: the list of interfaces for the proxy class to implement
+  * @param h: the invocation handler to dispatch method invocations to
+  *
+  */
+
+  上面这段英文摘自newProxyInstance源码的注释。
+  翻译过来就是newProxyInstance方法返回指定接口的代理类实例，该接口将方法调用分派给指定的调用处理程序。
+  说简单点就是newProxyInstance用来调用处理程序，并返回结果的。
+
+  第一个参数需要传一个classLoader类加载器，如果有了解过类加载器，可知我们编写的所有的类都是由系统类加载器加载的，所以只要是我们自己编写的类，获取他们的类加载器得到的都是同一个类加载器。所以这里传那个类的类加载器都无所谓。
+  第二个参数是一个接口数组，来告诉newProxyInstance方法，在生成动态代理类的时候需要实现这些接口。
+  第三个参数是InvocationHandler类型，用来将方法调用分派到的调用处理程序。其实就是调用在实现InvocationHandler接口时重写的invoke方法。
+  ```
+* 第二个需要注意的是InvocationHandler接口提供的invoke方法
+  1. 动态创建代理类时使用的newProxyInstance方法第三个参数 h 接受一个InvocationHandler类型的实现类（myInvocation）。
+  2. 执行proxy.rent(houseName)时，会先获取要执行的（Method）rent方法和参数houseName。
+  3. 把第二步获取的（Method）rent方法和参数houseName 传给myInvocation的invoke()方法去执行。
+  4. 在myInvocation的invoke方法里面添加额外的操作（谈价格，签合同等），最终method.invoke(target, args)利用反射去执行真正的rent方法
+* 第三个需要注意的是method.invoke方法
+  可以把method.invoke比作JavaScript提供的call方法。
+
+总结：代理模式可以降低业务逻辑之间的耦合度，每一种设计模式都是一种思想，简单的demo无法展现它们真正的魅力，但很多优秀的开源代码都是各种设计模式的完美实现，比如强大的Spring。
+
+## AOP
+AOP允许用户自定义切面，并提供声明式事物。
+**概念：**
+面向切面编程，通过预编译方式和运行期动态代理实现程序功能的统一维护的一种技术。AOP是OOP的延续，是软件开发中的一个热点，也是Spring框架的一个重要内容，是函数式编程的一种衍生范型。利用AOP可以对业务逻辑的各个部分进行隔离，从而使得业务逻辑各部分之间的耦合度降低，提高程序的重用性，同时提高了开发的效率。
+
+所谓AOP面向切面，就好比下水道的过滤网用来过滤水中体积比较大的杂质以防堵下水道，过滤网可以可以放在下水道的任何一个地方，所有的污水都会通过过滤网的过滤，用户只管往下水道倒水，不用担心下水道被堵的问题。
+开发者编写的业务代码就好比一个下水道管道，AOP切面就好比一张过滤网，可以插入业务代码某个方法，每次执行这个方法都会经过切面处理，业务只管执行这些方法.
+**关键词**
+* 连接点（JointPoint）：在应用执行过程中可以插入切面的任何一个地方。就好比下水道任何一个可以插入过滤网的地方，是一个抽象概念
+* 切入点（PointCut）：具体的某一个连接点（比如洗菜池的出水口）
+* 通知（Advice）：切面在切入点要做的工作
+  * 前置通知（Before）：在目标方法被执行之前要做的工作
+  * 后置通知（After）：在目标方法被执行之后要做的工作
+  * 返回通知（After-returning）：在目标方法成功执行之后要做的工作
+  * 异常通知（After-throwing）：在目标方法抛出异常后要做的工作
+  * 环绕通知（Around）：在被通知的方法调用之前和之后执行的工作
+* 目标（Target）：被通知的对象
+* 切面（Aspect）：切面是通知和切点的结合，是一个类
+* 织入（Weaving）：织入是把切面应用到目标对象并创建新的代理对象的过程
+
+### Spring AOP实例
+idea新建一个maven项目，导入织入包aspectjweaver和junit
+```
+<dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.11</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.aspectj</groupId>
+      <artifactId>aspectjweaver</artifactId>
+      <version>1.9.5</version>
+    </dependency>
+  </dependencies>
+```
+#### 基于类：需要借助eglib工具
    
-2. 基于java字节码：借助javasist工具
+#### 基于java字节码：借助javasist工具
    
-两个重要的类：
-* Proxy
-Proxy提供了创建动态代理类和实例的静态方法，它也是由这些方法创建的所有动态代理类的超类。
-* InvocationHandler
-InvocationHandler是由代理实例的调用处理程序实现的接口。每个代理实例都有一个关联的调用处理程序，当在代理实例上调用方法时，方法调用将被编码并分派到其调用处理程序的invoke方法。
+
 
 
 
