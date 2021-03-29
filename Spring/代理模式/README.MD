@@ -63,7 +63,7 @@ public class Client{
 静态代理的缺点：不同的场景需要定义不同的代理类，如果换成办卡业务场景，需要再定义一个办卡代理类（CardProxy）
 动态代理特点：动态代理的代理类是动态生成的，不需要手动声明。
 动态代理分为两大类：
-#### 基于接口：借助JDK动态代理
+#### 基于接口：JDK动态代理
     两个重要的工具：
     * Proxy类：动态代理的代理类是动态生成的，而Proxy则提供了创建动态代理类方法
     * InvocationHandler接口：只提供了一个invoke方法，并在该方法内利用反射执行被代理对象真实的方法。
@@ -148,5 +148,39 @@ public class Client {
 
 
 #### 基于类：需要借助cglib工具
-   
-#### 基于java字节码：借助javasist工具
+JDK Proxy代理的前提条件是被代理目标必须是某个接口的实现类，如果想直接代理一个普通的类，需要借助cglib实现
+```
+// 代理目标类Dog.java
+public class Dog {
+    public void speak() {
+        System.out.println("汪汪");
+    }
+}
+// MyInterceptor.java
+public class MyInterceptor implements MethodInterceptor {
+    @Override
+    public Object intercept(Object o, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
+        System.out.println("前置操作");
+        Object result = methodProxy.invokeSuper(o, args);
+        System.out.println("后置操作");
+        return result;
+    }
+}
+// 测试 MyTest.java
+public class MyTest {
+    public static void main(String[] args) {
+        Enhancer enhancer =new Enhancer();
+        enhancer.setSuperclass(Dog.class);
+        enhancer.setCallback(new MyInterceptor());
+        Dog proxy = (Dog) enhancer.create();
+        proxy.speak();
+
+    }
+}
+// 输出结果：
+前置操作
+汪汪
+后置操作
+```
+MethodInterceptor的作用类似JDK动态代理InvocationHandler接口，但其实现原理是不一样的。
+<!-- #### 基于java字节码：借助javasist工具 -->
