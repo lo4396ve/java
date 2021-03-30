@@ -69,13 +69,13 @@ public class Client{
     * InvocationHandler接口：只提供了一个invoke方法，并在该方法内利用反射执行被代理对象真实的方法。
 
 
-动态代理只是帮助动态生成代理类（中介）。继续使用静态代理声明的Rent和House。
+动态代理只是帮助动态生成代理类（中介）。
 
 新建ProxyInvocationHandler类：
 ```
 // 利用这个类自动创建代理类
 public class MyInvocation implements InvocationHandler {
-    // 声明被代理的目标对象（比如该业务场景下为House房子）
+    // 声明被代理的目标对象（该场景下为House房子）
     private Object target;
     public void setTarget(Object target) {
         this.target = target;
