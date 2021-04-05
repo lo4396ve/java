@@ -1,8 +1,10 @@
 # Mybatis
 ## 1、概念
 MyBatis是一个Java持久化框架，它通过XML描述符或注解把对象与存储过程或SQL语句关联起来，映射成数据库内对应的纪录。
-不管什么持久化框架，最后都绕不开jdbc，说白了Mybatis就是对jdbc的一个封装，支持定制化 SQL、存储过程以及高级映射，MyBatis 避免了几乎所有的 JDBC 代码和手动设置参数以及获取结果集。MyBatis 可以使用简单的 XML 或注解来配置和映射原生信息。
-> jdbc: Java数据库连接，（Java Database Connectivity，简称JDBC）是Java语言中用来规范客户端程序如何来访问数据库的应用程序接口，提供了诸如查询和更新数据库中数据的方法。
+
+不管什么持久化框架，最后都绕不开JDBC，说白了Mybatis就是对jdbc的一个封装，支持定制化 SQL、存储过程以及高级映射，MyBatis 避免了几乎所有的 JDBC 代码和手动设置参数以及获取结果集。MyBatis 可以使用简单的 XML 或注解来配置和映射原生信息。
+
+JDBC: Java数据库连接，（Java Database Connectivity，简称JDBC）是Java语言中用来规范客户端程序如何来访问数据库的应用程序接口，提供了诸如查询和更新数据库中数据的方法。
 
 ## 2、使用Mybatis
 每个基于 MyBatis 的应用都是以一个 SqlSessionFactory 的实例为核心的。SqlSessionFactory 的实例可以通过 SqlSessionFactoryBuilder 获得。而 SqlSessionFactoryBuilder 则可以从 XML 配置文件或一个预先配置的 Configuration 实例来构建出 SqlSessionFactory 实例。
@@ -633,5 +635,5 @@ public class MybatisTest {
 }
 ```
 
-
+事实上Mybatis不止xml配置使用方式，还支持注解配置的方式，上述示例只展示了查表select的操作，还有更多更复杂的操作。无论哪种方式，Mybatis的工作原理都是不变的，更多Mybatis使用参见[Mybatis官方文档](https://mybatis.org/mybatis-3/)，或者[中文文档](https://mybatis.org/mybatis-3/zh/)
 
