@@ -125,3 +125,78 @@ int n = ps.executeUpdate(); // 返回删除的行数
 ```
 
 ## 4、事务
+### 4.1 特性
+数据库事务（Transaction），多条SQL命令执行，要么都成功，要么都失败，只要有一条命令失败，都需要回滚操作。
+数据库事务具有ACID特性：
+* **原子性（Atomicity）** 事务是最小单位。一个事务中的所有操作，要么全部完成，要么全部不完成
+* **一致性（Consistency）** 执行事务是使得数据库从一个一致性状态到另一个一致性状态，如果事务最终没有被提交，那么事务所做的修改也不会保存到数据库中
+* **隔离性（Isolation）** 涉及到隔离级别的概念，当多个事务同时对数据库操作，通过设置不同的隔离级别实施不同的处理方案
+* **持久性（Durability）** 事务一旦被提交，那么对数据库的修改会被永久的保存
+
+### 4.2 隔离级别
+#### 4.2.1 未提交读（READ UNCOMMITTED）
+两个事务同时操作数据库，但是其中一个事务A可以读到另一个未提交事务B修改过的数据。这种隔离级别就称为未提交读。
+
+如果事务B又进行了回滚，那么事务A就相当于读取到了不存在的数据，这种现象称为脏读。这种隔离级别非常不安全，尽量不要使用。
+
+READ UNCOMMITTED隔离级别的事务实现方式就是直接读取记录的最新版本。
+
+#### 4.2.2 已提交读（READ COMMITTED）
+一个事务只能读到另一个已经提交的事务修改过的数据，并且其他事务每对该数据进行一次修改并提交后，该事务都能查询得到最新值，这种隔离级别称为已提交读。
+
+已提交读不存在脏读的情况，由于每次其他事务提交的修改该事务都能获取到最新值，所以这种隔离级别下会存在某一事务对同一条记录每次获取的值不一样，这种现象称为不可重复读（即一个事务中多次读的数据可能都不一样）。
+#### 4.2.3 可重复读（REPEATABLE READ）
+**默认隔离级别** ，一个事务只能读到其他已经提交的事务修改过的数据，但是第一次读过某条记录后，即使其他事务修改了该记录的值并且提交，该事务之后再读该条记录时，读到的仍是第一次读到的值，而不是最新值，这种隔离级别就称为可重复读
+
+也就是在一个事务里，对某条记录只要读过一次，后面再读都是第一次读到的值，不再变化，保证在一个事务中多次读同一条记录每次都得到同样的值。
+
+READ COMMITTED和REPEATABLE READ隔离级别的实现方式比较复杂，涉及到版本链和ReadView的概念。
+#### 4.2.4 串行化（SERIALIZABLE）
+以上3种隔离级别都允许对同一条记录进行读-读、读-写、写-读的并发操作，如果我们不允许读-写、写-读的并发操作。如果一个事务对数据库进行读写操作时有其他事务正在对数据库操作，该事务会处于等待状态，直到其他事务操作结束该事务再进行操作。这种隔离级别称为串行化。
+
+串行化利用锁来实现，当一个事务对数据库某一天记录操作时，会给这条记录加锁，锁的作用就是防止其他事务再对这条记录操作，直到该事务提交才会释放锁，其他事务才可以读写这条记录。这种隔离级别可能导致大量超时和锁争用的问题，实际中很少使用这个隔离级别。
+
+
+### 4.3 使用事务
+JDBC在执行SQL命令时，每次执行完一句SQL就会自动commit提交。如果要把多条SQL包裹在一个数据库事务中执行，就要先关闭JDBC的自动提交，然后手动提交和回滚。
+```
+Connection conn = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD);
+try{
+  conn.setAutoCommit(false);  // 关闭自动提交
+
+  PreparedStatement ps = conn.prepareStatement("DELETE FROM user WHERE id=1");
+  int n = ps.executeUpdate(); // 执行第一个SQL
+  PreparedStatement ps = conn.prepareStatement("DELETE FROM user WHERE id=2");
+  int n = ps.executeUpdate(); // 执行第二个SQL
+
+  conn.commit();  // 提交事务
+
+} catch(SQLException e) {
+  // 回滚事务:
+  conn.rollback();
+} finally {
+  conn.setAutoCommit(true);
+  conn.close();
+}
+```
+
+## 5、Batch批量操作
+如果要把user表中的每个人的年龄加一，可以使用循环的方式执行多次SQL，这种方式效率比较低，可以使用batch批量执行。
+```
+PreparedStatement ps = conn.prepareStatement("INSERT INTO user (id, name, age) VALUES (?, ?, ?)");
+for (User user : userList) {
+    ps.setInt(1, user.id);
+    ps.setString(2, user.name);
+    ps.setInt(3, user.age + 1);
+    ps.addBatch(); // 添加到batch
+}
+
+int[] ns = ps.executeBatch();
+for (int n : ns) {
+    System.out.println(n + " inserted."); // batch中每个SQL执行的结果数量
+}
+```
+
+
+
+
