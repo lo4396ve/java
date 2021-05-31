@@ -97,7 +97,7 @@ int n = ps.executeUpdate(); // 返回入的记录数量 1
 PreparedStatement ps = conn.prepareStatement("INSERT INTO user (username, pass) VALUES (?,?)",Statement.RETURN_GENERATED_KEYS);
 ps.setObject(1, "张三"); // 注意：索引从1开始
 ps.setObject(2, "passsword");
-int n = ps.executeUpdate(); // 返回入的记录数量 1
+int n = ps.executeUpdate(); // 返回插入的记录数量 1
 try (ResultSet rs = ps.getGeneratedKeys()) {
     if (rs.next()) {
         long id = rs.getLong(1); // 注意：索引从1开始
@@ -182,19 +182,63 @@ try{
 
 ## 5、Batch批量操作
 如果要把user表中的每个人的年龄加一，可以使用循环的方式执行多次SQL，这种方式效率比较低，可以使用batch批量执行。
+Statement和PreparedStatement都提供了addBatch方法，用于批量处理。
+### 5.1 Statement对象的批量更新示例
 ```
-PreparedStatement ps = conn.prepareStatement("INSERT INTO user (id, name, age) VALUES (?, ?, ?)");
-for (User user : userList) {
-    ps.setInt(1, user.id);
-    ps.setString(2, user.name);
-    ps.setInt(3, user.age + 1);
-    ps.addBatch(); // 添加到batch
-}
+Statement stmt = conn.createStatement();
+// Set auto-commit to false
+conn.setAutoCommit(false);
+// Create SQL statement
+String SQL = "INSERT INTO Employees (id, first, last, age) " +
+             "VALUES(200,'Ruby', 'Yang', 30)";
+// Add above SQL statement in the batch.
+stmt.addBatch(SQL);
 
-int[] ns = ps.executeBatch();
-for (int n : ns) {
-    System.out.println(n + " inserted."); // batch中每个SQL执行的结果数量
-}
+// Create one more SQL statement
+String SQL = "INSERT INTO Employees (id, first, last, age) " +
+             "VALUES(201,'Java', 'Lee', 35)";
+// Add above SQL statement in the batch.
+stmt.addBatch(SQL);
+
+// 处理批处理 并返回
+int[] count = stmt.executeBatch();
+
+// 手动提交
+conn.commit();
+
+stmt.close();
+conn.close();
+```
+
+### 5.2 PrepareStatement对象进行批处理
+```
+String SQL = "INSERT INTO Employees (id, first, last, age) " + "VALUES(?, ?, ?, ?)";
+PreparedStatemen pstmt = conn.prepareStatement(SQL);
+conn.setAutoCommit(false);
+// Set the variables
+pstmt.setInt( 1, 400 );
+pstmt.setString( 2, "JDBC" );
+pstmt.setString( 3, "Li" );
+pstmt.setInt( 4, 33 );
+// Add it to the batch
+pstmt.addBatch();
+
+// Set the variables
+pstmt.setInt( 1, 401 );
+pstmt.setString( 2, "CSharp" );
+pstmt.setString( 3, "Liang" );
+pstmt.setInt( 4, 18 );
+// Add it to the batch
+pstmt.addBatch();
+
+// 处理批处理 并返回
+int[] count = pstmt.executeBatch();
+
+// 手动提交
+conn.commit();
+
+stmt.close();
+conn.close();
 ```
 
 
